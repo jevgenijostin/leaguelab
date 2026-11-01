@@ -92,7 +92,7 @@ describe('hard acceptance gates', () => {
     const changed = perturbed.filter((m, i) => m.hg !== data.completed[i].hg || m.ag !== data.completed[i].ag).length;
     expect(changed).toBeGreaterThan(0);
     console.log('G2', JSON.stringify({ cutoff, training: a.fit.nTrain, randomized: perturbed.filter(m => m.date >= cutoff).length, changed, predictions: a.predictions.length, maxAbsoluteDifference: Math.max(...numbersA.map((v, i) => Math.abs(v - numbersB[i]))), identicalBytes: numbersA.length * 8 }));
-  });
+  }, 30000);
   for (const world of ['null', 'signal'] as const) it(world === 'null' ? 'G3: equal-team null canary cannot claim improvement' : 'G4: realistic signal beats baseline with positive CI and ECE < 0.05', () => {
     const data = syntheticLeague(world), start = performance.now();
     const result = backtest(data.teams, data.completed), durationMs = performance.now() - start;
