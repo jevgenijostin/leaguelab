@@ -100,3 +100,29 @@ The first test run had 51 passes and one failure from an extra assertion requiri
 Final cumulative phase-4 validation: **53 tests passed, 0 failed, across 9 files** (14.20 seconds). TypeScript and the production build passed. The prior 39 tests remain passing, with 14 new tests covering metrics, the generator, protocol, diagnostics, and gates.
 
 Phase-4 protocol and hard gates have no algorithmic deviations from the brief. Window anchoring, Brier scaling, percentile interpolation, and empty-bin behavior above make its unspecified conventions explicit. Direct commits to main follow the user's instruction overriding the branch convention. Rendering banners, greying bins, and exporting cutoff tables belong to the UI/export phases; their data and labels are ready. No real-data run was performed.
+
+## Phase 5: browser interface
+
+The single-page app now opens with a synthetic demo league: 20 teams, 950 completed results across the loaded history, and 190 remaining fixtures in the current season. **Load demo league** resets the data and derived results. No real data is bundled and no real-data run was performed.
+
+Run `npm install` and `npm run dev`, then use the Data, Model, Forecast, What-if, Evidence, Export / Pro, and About tabs. Fit the model in Model, run the unlocked forecast in Forecast, and run the chronological backtest in Evidence. Evidence remains free. Fitting, gradient checks, backtests and sensitivity runs execute in an analysis worker; simulations execute in their existing worker. Tasks can be cancelled. Changing data, fit settings or simulation inputs invalidates dependent results so old estimates cannot be presented as current.
+
+Data accepts multiple completed-results CSVs selected together and a separate remaining-fixtures CSV. Importing the first file replaces the demo. Selecting new completed files replaces the history, so select all desired seasons together. Results require `Date,HomeTeam,AwayTeam,FTHG,FTAG`; fixtures require `HomeTeam,AwayTeam` with optional `Date`. Names are trimmed, quoted fields are supported, and extra fields are ignored. Accepted dates are ISO, dd/mm/yyyy and dd/mm/yy (two-digit years map to 2000–2099). Invalid rows are listed with file and physical line number and require explicit acknowledgment. Missing, duplicated and unknown pairs, incorrect fixture totals and invalid season boundaries block analysis independently of acknowledgment. The season picker initially follows the last gap longer than 45 days. All loaded history trains the model; only the current season contributes standings.
+
+Evidence displays the actual RPS verdict, all three loss comparisons with paired gain intervals, the small-sample warning when applicable, and unconverged-block warnings. The handwritten SVG reliability chart shows counts and Wilson intervals; its full table includes empty and sparse bins. Half-life sensitivity runs report 120/300/600 days and no decay without selecting a winner. The block audit includes strict cutoff, training/effective sample sizes, test size, convergence, iteration count, objective, gradient norm and termination reason. The default demo evaluates **850 matches**; its rounded RPS gain is **0.0237**, with approximate 95% CI **[0.0147, 0.0319]**, ECE **0.0226**, and **18 unconverged blocks**. These differ from the full three-season G4 gate because the demo reserves its final 190 matches as unobserved fixtures. No frozen defaults were changed.
+
+Forecast includes current and expected points, percentile ranges, title/top/bottom probabilities with Monte Carlo standard errors, expected rank, and an SVG position heatmap with a full table alternative. Seed, simulation count and thresholds are configurable; reshuffling changes the seed. What-if supports one Free result lock and a delta table against the unlocked forecast. About discloses the ridge deviation, tie-break order and model limits. Free CSV export works and includes the LeagueLab credit. The Export / Pro tab describes edition limits and explicitly disables license entry: license validation, centralized entitlements, paid exports, saved scenarios and comparisons are **not implemented yet**. These remain phase 6, together with the full README reorganization. All other requested phase-5 screens are implemented.
+
+Validation for this phase:
+
+| Check | Result |
+|---|---|
+| Cumulative Vitest suite | **67 passed, 0 failed**, 11 files, 27.52 seconds |
+| Chromium browser tests | **2 passed, 0 failed**, 26.6 seconds |
+| G8 | **11 importer tests passed**; browser checks also verify acknowledgment and format blocking |
+| G9 | Existing exact source/README copy-lint test **passed** without additional exemptions |
+| TypeScript / production build | Passed |
+
+The new jsdom smoke test executes the bundled production workers in Node worker threads, adapting only the browser transport. It covers demo → fit → forecast → locked scenario → backtest, actual verdict and sensitivity rendering, invalidation and no console errors. Separate tests cover small samples and keyboard tab navigation. Vitest now discovers both `.test.ts` and `.test.tsx`. The Chromium checks exercise actual browser workers, cancellation, CSV download, import blocking and a 390-pixel mobile layout without page overflow or console errors. Screenshots are generated under gitignored `test-results/`.
+
+For browser checks, run `npx playwright install chromium` once, then `npm run test:browser`. `npm run test` remains the CI unit/integration command, including G8/G9 and the worker-backed UI smoke test. Development-only jsdom and Playwright packages add no runtime dependencies. The existing G1–G6 numerical gates remain passing; convergence limitations remain disclosed rather than hidden. Bootstrap rating uncertainty remains omitted. Next: phase 6 license/entitlements, Pro exports and scenarios, and the complete README with screenshot and consolidated gate/timing report.
