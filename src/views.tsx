@@ -1,3 +1,4 @@
+import { download } from './export/exports';
 import type { ReactNode } from 'react';
 import type { backtest, halfLifeSensitivity } from './core/backtest';
 import type { SimulationResult } from './core/simulate';
@@ -15,6 +16,10 @@ export function Evidence({ result, sensitivity }: { result?: ReturnType<typeof b
     {!!result.nonConvergedCutoffs.length && <p className="warning">Not converged: {result.nonConvergedCutoffs.length} block fits. Their predictions remain in the metrics. Inspect diagnostics below.</p>}
     <p>{result.bootstrap.caption} Positive gain means lower loss for the model. Lower scores are better.</p>
     {result.metrics ? <Table caption="Out-of-sample losses" headers={['Metric', 'Model', 'Baseline', 'Gain', 'Gain 95% CI']} rows={Object.entries(result.metrics).map(([name, m]) => [name, number(m.model), number(m.baseline), number(m.gain), `${number(m.ci[0])} to ${number(m.ci[1])}`])}/> : <p>No eligible test matches. At least 100 strictly earlier matches are needed before the first test date.</p>}
+    <button onClick={() => {
+      const rows = [['Cutoff','TrainingMatches','EffectiveN','TestMatches','Converged','Iterations','Objective','GradientInfinityNorm','Reason'], ...result.blocks.map(b => [b.cutoff,b.fit.nTrain,b.fit.effectiveN,b.predictions.length,b.fit.diag.converged,b.fit.diag.iterations,b.fit.diag.objective,b.fit.diag.gradInfNorm,b.fit.diag.reason])];
+      download(rows.map(r => r.map(x => '"'+String(x).replaceAll('"','""')+'"').join(',')).join('\r\n'), 'leaguelab-cutoffs.csv','text/csv;charset=utf-8');
+    }}>Download cutoff audit CSV</button>
     <h3>Calibration reliability</h3><p>All three outcome classes pooled. ECE: {number(c.ece)}. Vertical bars show Wilson 95% intervals. Grey points have fewer than 20 predictions.</p>
     <svg viewBox="0 0 600 360" role="img" aria-labelledby="cal-title cal-desc" className="chart">
       <title id="cal-title">Predicted probability versus observed frequency</title><desc id="cal-desc">The table below gives every bin, count and interval. The dashed diagonal represents perfect agreement.</desc>
